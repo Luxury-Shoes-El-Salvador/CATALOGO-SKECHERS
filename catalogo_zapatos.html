@@ -994,4 +994,71 @@ if(urlMarca){
 loadData();
 </script>
 </body>
+  <script>
+  // 1. Identificar si el usuario busca SKECHERS NEGROS o SKECHERS COLORES
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoriaFiltro = urlParams.get('categoria'); 
+  
+  // 2. Coloca aquí el enlace que te dio Google Apps Script
+  const API_URL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
+
+  async function cargarInventario() {
+    try {
+      const respuesta = await fetch(API_URL);
+      const datos = await respuesta.json();
+
+      // 3. Filtrar por la columna "TIPO DE ZAPATO"
+      const zapatosFiltrados = datos.filter(zapato => {
+        if (!categoriaFiltro) return true; // Si no hay parámetro, muestra todo el catálogo
+        
+        const tipoZapato = zapato['TIPO DE ZAPATO'] ? zapato['TIPO DE ZAPATO'].toUpperCase() : '';
+        const categoriaBuscada = categoriaFiltro.toUpperCase();
+        
+        return tipoZapato === categoriaBuscada;
+      });
+
+      renderizarGrid(zapatosFiltrados);
+
+    } catch (error) {
+      console.error("Error sincronizando con la base de datos:", error);
+    }
+  }
+
+  function renderizarGrid(zapatos) {
+    const grid = document.querySelector('.grid');
+    grid.innerHTML = ''; // Limpiar el contenedor principal
+
+    if (zapatos.length === 0) {
+      grid.innerHTML = '<div class="empty"><h2>No hay modelos disponibles</h2><p>Intenta explorar otra categoría.</p></div>';
+      return;
+    }
+
+    // 4. Construir las tarjetas según tu CSS existente
+    zapatos.forEach(zapato => {
+      // Nota: Asegúrate de que los nombres entre corchetes coincidan exactamente con las columnas de tu hoja
+      const card = `
+        <div class="card">
+          <div class="card-gallery">
+            <img src="${zapato['IMAGEN']}" class="active" alt="${zapato['MODELO']}">
+            <div class="status-badge badge-disponible">DISPONIBLE</div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-model">${zapato['MODELO']}</h3>
+            <div class="card-tags">
+              <span class="ctag">${zapato['TIPO DE ZAPATO']}</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="price">$${zapato['PRECIO']}</span>
+            <span class="size-chip">Talla ${zapato['TALLA']}</span>
+          </div>
+        </div>
+      `;
+      grid.innerHTML += card;
+    });
+  }
+
+  // Inicializar el sistema al abrir la página
+  cargarInventario();
+</script>
 </html>
