@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mejorador de Producto Pro</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #e2e6ea;
+    --border2: #c8cdd4;
+    --text: #1a1d23;
+    --text2: #5a6270;
+    --text3: #9aa0ab;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --blue-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2a2f3e;
+      --border2: #3a4052;
+      --text: #e8eaf0;
+      --text2: #9aa0b0;
+      --text3: #5a6070;
+      --blue-light: #1e3a6e;
+      --green-light: #14532d;
+      --red-light: #7f1d1d;
+      --amber-light: #78350f;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100svh;
+    line-height: 1.5;
+  }
+
+  /* ── Layout ── */
+  .app { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; margin-bottom: 12px; }
+  header h1 { font-size: clamp(22px, 5vw, 32px); font-weight: 700; color: var(--text); }
+  header p { font-size: 14px; color: var(--text2); margin-top: 6px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+  .card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .card-head .icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-head h2 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-head .step { font-size: 11px; font-weight: 700; color: var(--text3); margin-left: auto; }
+  .card-body { padding: 18px; }
+
+  /* ── API Key ── */
+  .api-row { display: flex; gap: 8px; align-items: center; }
+  .api-row input { flex: 1; height: 40px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 13px; padding: 0 12px; font-family: monospace; outline: none; transition: border-color 0.15s; }
+  .api-row input:focus { border-color: var(--blue); }
+  .api-row input::placeholder { color: var(--text3); font-family: -apple-system, sans-serif; }
+  .btn-icon { width: 40px; height: 40px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s; }
+  .btn-icon:hover { background: var(--border); }
+  .api-status { font-size: 12px; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+  .api-status.ok { color: var(--green); }
+  .api-status.missing { color: var(--text3); }
+
+  /* ── Background selector ── */
+  .bg-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bg-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+  .bg-opt input { display: none; }
+  .bg-swatch { width: 52px; height: 52px; border-radius: 10px; border: 2px solid var(--border); transition: border-color 0.15s, transform 0.12s; }
+  .bg-opt input:checked + .bg-swatch { border-color: var(--blue); transform: scale(1.07); }
+  .bg-opt span { font-size: 11px; color: var(--text2); }
+  #sw-white { background: #ffffff; box-shadow: inset 0 0 0 1px #e0e0e0; }
+  #sw-gray { background: linear-gradient(135deg, #e8e8e8, #d0d0d0); }
+  #sw-charcoal { background: #2d2d2d; }
+  #sw-gradient1 { background: linear-gradient(135deg, #f0f4ff, #e8eeff); }
+  #sw-gradient2 { background: linear-gradient(135deg, #fff8f0, #ffeedd); }
+  #sw-custom { border: 2px dashed var(--border2); display: flex; align-items: center; justify-content: center; background: var(--surface2); }
+
+  /* ── Upload area ── */
+  .upload-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .upload-chip { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface2); transition: border-color 0.12s, background 0.12s; }
+  .upload-chip:hover, .upload-chip:active { border-color: var(--blue); background: var(--blue-light); }
+  .upload-chip .chip-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .upload-chip span { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .upload-chip input { display: none; }
+  .dropzone { border: 2px dashed var(--border2); border-radius: var(--radius-sm); padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .dropzone.over { border-color: var(--blue); background: var(--blue-light); }
+  .dropzone p { font-size: 13px; color: var(--text3); margin-top: 6px; }
+  .dropzone .dz-label { font-size: 14px; font-weight: 500; color: var(--text2); }
+
+  /* ── Batch queue ── */
+  #queueSection { display: none; }
+  .queue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .q-item { position: relative; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); background: var(--surface2); aspect-ratio: 1; }
+  .q-item img { width: 100%; height: 100%; object-fit: cover; }
+  .q-item .q-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.15s; }
+  .q-item:hover .q-overlay { opacity: 1; }
+  .q-item .q-status { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .q-item .q-name { position: absolute; bottom: 0; left: 0; right: 0; padding: 4px 6px; background: rgba(0,0,0,0.6); font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-status.pending { background: rgba(0,0,0,0.5); color: #fff; }
+  .q-status.processing { background: var(--blue); color: #fff; }
+  .q-status.done { background: var(--green); color: #fff; }
+  .q-status.error { background: var(--red); color: #fff; }
+
+  .add-more-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; aspect-ratio: 1; border: 2px dashed var(--border2); border-radius: var(--radius-sm); cursor: pointer; background: transparent; color: var(--text3); font-size: 12px; transition: border-color 0.12s; }
+  .add-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .add-more-btn input { display: none; }
+
+  /* ── Action bar ── */
+  .action-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn { height: 42px; padding: 0 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: none; transition: opacity 0.12s, transform 0.1s; white-space: nowrap; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+  .btn-dark { background: var(--text); color: var(--bg); }
+  .btn-dark:hover:not(:disabled) { opacity: 0.85; }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .progress-wrap { flex: 1; min-width: 160px; }
+  .progress-bar-bg { height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-bar-fill { height: 100%; background: var(--blue); border-radius: 99px; transition: width 0.3s ease; width: 0%; }
+  .progress-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* ── Result viewer ── */
+  #resultSection { display: none; }
+  .result-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all 0.12s; }
+  .tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* Side-by-side view */
+  .side-view { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .img-panel { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); background: var(--surface2); }
+  .img-panel-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .img-panel img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; background: #fff; }
+
+  /* Slider comparison */
+  .slider-wrap { position: relative; overflow: hidden; border-radius: var(--radius-sm); border: 1px solid var(--border); aspect-ratio: 1; background: #fff; user-select: none; cursor: col-resize; touch-action: none; }
+  .slider-before, .slider-after { position: absolute; inset: 0; }
+  .slider-after img, .slider-before img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .slider-before { overflow: hidden; clip-path: inset(0 50% 0 0); }
+  .slider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #fff; box-shadow: 0 0 8px rgba(0,0,0,0.4); transform: translateX(-50%); }
+  .slider-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; cursor: col-resize; }
+  .slider-labels { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 12px; pointer-events: none; }
+  .slider-labels span { font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.55); color: #fff; padding: 2px 8px; border-radius: 99px; }
+
+  /* Single result grid */
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .res-item { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); background: var(--surface2); }
+  .res-item img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; display: block; }
+  .res-item-foot { padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .res-item-foot span { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .res-item-foot button { height: 28px; padding: 0 10px; border-radius: 6px; background: var(--text); color: var(--bg); font-size: 11px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+
+  /* ── Loading spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+  /* ── Toast ── */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); font-size: 13px; font-weight: 500; padding: 10px 20px; border-radius: 99px; box-shadow: var(--shadow-md); opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; z-index: 99; white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .side-view { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: repeat(2, 1fr); }
+    .queue-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── SVG icons inline ── */
+  .icon-svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">
+      <svg class="icon-svg" style="stroke:#fff" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Gemini 2.5 Flash
+    </div>
+    <h1>Mejorador de Fotografía Pro</h1>
+    <p>Fondo de estudio · Iluminación comercial · Procesamiento múltiple</p>
+  </header>
+
+  <!-- Step 1: API Key -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon" style="background:#dbeafe">
+        <svg class="icon-svg" style="stroke:#2563eb" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      </div>
+      <h2>API Key de Gemini</h2>
+      <span class="step">Paso 1</span>
+    </div>
+    <div class="card-body">
+      <div class="api-row">
+        <input type="password" id="apiKeyInput" placeholder="Pega tu API Key de Google AI Studio aquí…" autocomplete="off" spellcheck="false">
+        <button class="btn-icon" id="toggleKey" title="Mostrar/ocultar">
+          <svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="btn-icon" id="saveKey" title="Guardar">
+          <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+      <div class="api-status missing" id="apiStatus">
+        <svg class="icon-svg" style="width:12px;height:12px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        No se ha configurado ninguna API Key. Obtén una gratis en <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Background -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon" style="background:#f0fdf4">
+        <svg class="icon-svg" style="stroke:#16a34a" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <h2>Tipo de fondo</h2>
+      <span class="step">Paso 2</span>
+    </div>
+    <div class="card-body">
+      <div class="bg-options">
+        <label class="bg-opt">
+          <input type="radio" name="bgType" value="white" checked>
+          <div class="bg-swatch" id="sw-white"></div>
+          <span>Blanco</span>
+        </label>
+        <label class="bg-opt">
+          <input type="radio" name="bgType" value="gray">
+          <div class="bg-swatch" id="sw-gray"></div>
+          <span>Gris</span>
+        </label>
+        <label class="bg-opt">
+          <input type="radio" name="bgType" value="charcoal">
+          <div class="bg-swatch" id="sw-charcoal"></div>
+          <span>Oscuro</span>
+        </label>
+        <label class="bg-opt">
+          <input type="radio" name="bgType" value="gradient_blue">
+          <div class="bg-swatch" id="sw-gradient1"></div>
+          <span>Azul suave</span>
+        </label>
+        <label class="bg-opt">
+          <input type="radio" name="bgType" value="gradient_warm">
+          <div class="bg-swatch" id="sw-gradient2"></div>
+          <span>Cálido</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Upload -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon" style="background:#fef3c7">
+        <svg class="icon-svg" style="stroke:#d97706" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      </div>
+      <h2>Subir imágenes</h2>
+      <span class="step">Paso 3</span>
+    </div>
+    <div class="card-body">
+      <div class="upload-methods">
+        <label class="upload-chip">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple>
+          <div class="chip-icon" style="background:#dbeafe">
+            <svg class="icon-svg" style="stroke:#2563eb;width:20px;height:20px" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span>Cámara</span>
+        </label>
+        <label class="upload-chip">
+          <input type="file" id="galleryInput" accept="image/*" multiple>
+          <div class="chip-icon" style="background:#f3e8ff">
+            <svg class="icon-svg" style="stroke:#9333ea;width:20px;height:20px" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <span>Galería</span>
+        </label>
+        <label class="upload-chip">
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+          <div class="chip-icon" style="background:#f0fdf4">
+            <svg class="icon-svg" style="stroke:#16a34a;width:20px;height:20px" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span>Archivo</span>
+        </label>
+      </div>
+      <div class="dropzone" id="dropzone">
+        <svg class="icon-svg" style="width:28px;height:28px;color:var(--text3);margin:0 auto 8px" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <p class="dz-label">Arrastra una o varias imágenes aquí</p>
+        <p>JPG · PNG · WEBP — múltiples archivos soportados</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Queue + Process -->
+  <div class="card" id="queueSection">
+    <div class="card-head">
+      <div class="icon" style="background:#fef3c7">
+        <svg class="icon-svg" style="stroke:#d97706" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      </div>
+      <h2>Cola de procesamiento</h2>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <span id="queueCount" style="font-size:12px;color:var(--text2)">0 imágenes</span>
+        <button class="btn btn-ghost" id="clearQueueBtn" style="height:30px;padding:0 12px;font-size:12px">Limpiar</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="queue-grid" id="queueGrid"></div>
+      <div style="margin-top:16px">
+        <div class="action-bar">
+          <button class="btn btn-primary" id="processBtn">
+            <svg class="icon-svg" style="stroke:#fff" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span id="processBtnLabel">Procesar todo</span>
+          </button>
+          <button class="btn btn-ghost" id="stopBtn" style="display:none">
+            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Detener
+          </button>
+          <div class="progress-wrap" id="progressWrap" style="display:none">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+            <p class="progress-label" id="progressLabel">Procesando…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: Results -->
+  <div class="card" id="resultSection">
+    <div class="card-head">
+      <div class="icon" style="background:#dcfce7">
+        <svg class="icon-svg" style="stroke:#16a34a" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>Resultados</h2>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-dark" id="downloadAllBtn" style="height:32px;padding:0 14px;font-size:12px">
+          <svg class="icon-svg" style="stroke:currentColor;width:14px;height:14px" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Descargar todo
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="result-tabs" id="resultTabs">
+        <button class="tab active" data-view="grid">Cuadrícula</button>
+        <button class="tab" data-view="sidebyside">Lado a lado</button>
+        <button class="tab" data-view="slider">Comparador</button>
+      </div>
+
+      <!-- Grid view -->
+      <div id="viewGrid">
+        <div class="result-grid" id="resultGrid"></div>
+      </div>
+
+      <!-- Side by side -->
+      <div id="viewSidebyside" style="display:none">
+        <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+          <label style="font-size:13px;color:var(--text2)">Imagen:</label>
+          <select id="sbSelect" style="height:34px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;padding:0 10px;outline:none"></select>
+        </div>
+        <div class="side-view" id="sbPanel">
+          <div class="img-panel"><div class="img-panel-label">Original</div><img id="sbOrigImg" src="" alt="Original"></div>
+          <div class="img-panel"><div class="img-panel-label">Mejorada</div><img id="sbResultImg" src="" alt="Resultado"></div>
+        </div>
+      </div>
+
+      <!-- Slider -->
+      <div id="viewSlider" style="display:none">
+        <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+          <label style="font-size:13px;color:var(--text2)">Imagen:</label>
+          <select id="sliderSelect" style="height:34px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;padding:0 10px;outline:none"></select>
+        </div>
+        <div style="max-width:520px">
+          <div class="slider-wrap" id="sliderWrap">
+            <div class="slider-after"><img id="sliderAfter" src="" alt="Resultado"></div>
+            <div class="slider-before" id="sliderBefore"><img id="sliderBefore_img" src="" alt="Original"></div>
+            <div class="slider-line" id="sliderLine"></div>
+            <div class="slider-handle" id="sliderHandle">
+              <svg style="width:16px;height:16px;fill:none;stroke:#555;stroke-width:2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg style="width:16px;height:16px;fill:none;stroke:#555;stroke-width:2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="slider-labels"><span>ANTES</span><span>DESPUÉS</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem('gemini_key') || '';
+let queue = [];        // {id, file, name, origUrl, base64, mime, status, resultUrl}
+let results = [];      // completed items with resultUrl
+let processing = false;
+let stopRequested = false;
+
+// ─── Background prompts ───────────────────────────────────────────────────────
+const bgPrompts = {
+  white:         'a pure white, clean studio background',
+  gray:          'a clean neutral light-gray studio background',
+  charcoal:      'a dark charcoal/near-black studio background',
+  gradient_blue: 'a very subtle soft light-blue-to-white gradient studio background',
+  gradient_warm: 'a very subtle warm white-to-cream gradient studio background'
+};
+
+function buildPrompt() {
+  const bgVal = document.querySelector('input[name="bgType"]:checked').value;
+  const bgDesc = bgPrompts[bgVal];
+  return `Edit this exact product image.
+CRITICAL RULE: DO NOT modify the product itself in any way. Keep the exact design, shape, texture, real colors, logos, stitching, and proportions 100% identical.
+ONLY enhance the following:
+1. Change the background to ${bgDesc}.
+2. Add soft, professional studio lighting and realistic drop shadows beneath the product.
+3. Improve overall photographic sharpness, clarity, and resolution to look like a high-end e-commerce catalog photo.
+DO NOT generate a new product. DO NOT stylize. DO NOT reinterpret. Keep it hyper-realistic.`;
+}
+
+// ─── API Key UI ───────────────────────────────────────────────────────────────
+const apiKeyInput = document.getElementById('apiKeyInput');
+const apiStatus   = document.getElementById('apiStatus');
+
+if (apiKey) {
+  apiKeyInput.value = apiKey;
+  setApiStatus(true);
+}
+
+document.getElementById('toggleKey').addEventListener('click', () => {
+  apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+});
+document.getElementById('saveKey').addEventListener('click', saveApiKey);
+apiKeyInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveApiKey(); });
+
+function saveApiKey() {
+  const v = apiKeyInput.value.trim();
+  if (!v) { showToast('Pega una API Key válida'); return; }
+  apiKey = v;
+  localStorage.setItem('gemini_key', v);
+  setApiStatus(true);
+  showToast('API Key guardada');
+}
+
+function setApiStatus(ok) {
+  if (ok) {
+    apiStatus.className = 'api-status ok';
+    apiStatus.innerHTML = '<svg class="icon-svg" style="width:12px;height:12px" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> API Key configurada correctamente';
+  } else {
+    apiStatus.className = 'api-status missing';
+    apiStatus.innerHTML = '<svg class="icon-svg" style="width:12px;height:12px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No se ha configurado ninguna API Key. Obtén una gratis en <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com</a>';
+  }
+}
+
+// ─── File handling ────────────────────────────────────────────────────────────
+['cameraInput','galleryInput','fileInput'].forEach(id => {
+  document.getElementById(id).addEventListener('change', e => addFiles(e.target.files));
+});
+
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('over'));
+dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('over'); addFiles(e.dataTransfer.files); });
+dropzone.addEventListener('click', () => document.getElementById('fileInput').click());
+
+function addFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  const promises = Array.from(fileList).filter(f => f.type.startsWith('image/')).map(file => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const b64Str = e.target.result;
+        const m = b64Str.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/i);
+        if (!m) { resolve(null); return; }
+        const id = Date.now() + Math.random();
+        resolve({ id, file, name: file.name, origUrl: b64Str, base64: m[2], mime: m[1], status: 'pending', resultUrl: null });
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+  Promise.all(promises).then(items => {
+    items.filter(Boolean).forEach(item => queue.push(item));
+    renderQueue();
+    document.getElementById('queueSection').style.display = '';
+  });
+}
+
+function renderQueue() {
+  const grid = document.getElementById('queueGrid');
+  document.getElementById('queueCount').textContent = queue.length + ' imagen' + (queue.length !== 1 ? 'es' : '');
+  
+  // Rebuild
+  grid.innerHTML = '';
+  queue.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'q-item';
+    div.dataset.id = item.id;
+    const statusIcons = { pending: '·', processing: '↻', done: '✓', error: '✗' };
+    div.innerHTML = `
+      <img src="${item.origUrl}" alt="${item.name}">
+      <div class="q-status ${item.status}">${statusIcons[item.status] || '·'}</div>
+      <div class="q-name">${item.name}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Add-more button
+  const addMore = document.createElement('label');
+  addMore.className = 'add-more-btn';
+  addMore.innerHTML = `
+    <input type="file" accept="image/*" multiple style="display:none">
+    <svg style="width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Agregar más
+  `;
+  addMore.querySelector('input').addEventListener('change', e => addFiles(e.target.files));
+  grid.appendChild(addMore);
+}
+
+document.getElementById('clearQueueBtn').addEventListener('click', () => {
+  if (processing) return;
+  queue = [];
+  results = [];
+  renderQueue();
+  document.getElementById('queueSection').style.display = 'none';
+  document.getElementById('resultSection').style.display = 'none';
+});
+
+// ─── Process ──────────────────────────────────────────────────────────────────
+document.getElementById('processBtn').addEventListener('click', startProcessing);
+document.getElementById('stopBtn').addEventListener('click', () => { stopRequested = true; });
+
+async function startProcessing() {
+  if (!apiKey) { showToast('Primero guarda tu API Key'); return; }
+  if (!queue.length) { showToast('Agrega al menos una imagen'); return; }
+  if (processing) return;
+
+  processing = true;
+  stopRequested = false;
+  document.getElementById('processBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = '';
+  document.getElementById('progressWrap').style.display = '';
+
+  const pending = queue.filter(i => i.status === 'pending' || i.status === 'error');
+  let done = 0;
+
+  for (const item of pending) {
+    if (stopRequested) break;
+    item.status = 'processing';
+    renderQueue();
+    updateProgress(done, pending.length, `Procesando ${item.name}…`);
+    try {
+      item.resultUrl = await callGemini(item.base64, item.mime);
+      item.status = 'done';
+    } catch (e) {
+      item.status = 'error';
+    }
+    done++;
+    renderQueue();
+    updateProgress(done, pending.length, done === pending.length ? 'Completado' : `Procesando…`);
+  }
+
+  processing = false;
+  document.getElementById('processBtn').style.display = '';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('processBtnLabel').textContent = 'Reprocesar fallidos';
+
+  results = queue.filter(i => i.status === 'done');
+  if (results.length) {
+    renderResults();
+    document.getElementById('resultSection').style.display = '';
+  }
+  if (stopRequested) showToast('Procesamiento detenido');
+  else showToast(`✓ ${results.length} imagen${results.length !== 1 ? 'es' : ''} procesada${results.length !== 1 ? 's' : ''}`);
+}
+
+function updateProgress(done, total, label) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label + (total ? ` (${done}/${total})` : '');
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function callGemini(base64, mime) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+  const payload = {
+    contents: [{ role: 'user', parts: [
+      { text: buildPrompt() },
+      { inlineData: { mimeType: mime, data: base64 } }
+    ]}],
+    generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+  };
+  const delays = [2000, 4000, 8000, 16000, 32000];
+  for (let i = 0; i < 5; i++) {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (res.status === 429 || res.status >= 500) {
+      if (i === 4) throw new Error('Server error ' + res.status);
+      await sleep(delays[i]); continue;
+    }
+    if (!res.ok) throw new Error('Error ' + res.status);
+    const data = await res.json();
+    const imgPart = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    if (imgPart?.inlineData?.data) {
+      const outMime = imgPart.inlineData.mimeType || 'image/jpeg';
+      return `data:${outMime};base64,${imgPart.inlineData.data}`;
+    }
+    throw new Error('Sin imagen en respuesta');
+  }
+}
+
+// ─── Results rendering ────────────────────────────────────────────────────────
+function renderResults() {
+  renderGridView();
+  populateSelects();
+  updateSliderView(0);
+  updateSideBySide(0);
+}
+
+function renderGridView() {
+  const grid = document.getElementById('resultGrid');
+  grid.innerHTML = '';
+  results.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'res-item';
+    div.innerHTML = `
+      <img src="${item.resultUrl}" alt="${item.name}">
+      <div class="res-item-foot">
+        <span>${item.name}</span>
+        <button onclick="downloadSingle(${idx})">↓</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function populateSelects() {
+  ['sbSelect','sliderSelect'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    results.forEach((item, i) => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = item.name;
+      sel.appendChild(opt);
+    });
+  });
+  document.getElementById('sbSelect').addEventListener('change', e => updateSideBySide(+e.target.value));
+  document.getElementById('sliderSelect').addEventListener('change', e => updateSliderView(+e.target.value));
+}
+
+function updateSideBySide(idx) {
+  if (!results[idx]) return;
+  document.getElementById('sbOrigImg').src = results[idx].origUrl;
+  document.getElementById('sbResultImg').src = results[idx].resultUrl;
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+document.getElementById('resultTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('#resultTabs .tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  const view = tab.dataset.view;
+  document.getElementById('viewGrid').style.display      = view === 'grid'       ? '' : 'none';
+  document.getElementById('viewSidebyside').style.display = view === 'sidebyside' ? '' : 'none';
+  document.getElementById('viewSlider').style.display    = view === 'slider'     ? '' : 'none';
+});
+
+// ─── Slider comparison ────────────────────────────────────────────────────────
+function updateSliderView(idx) {
+  if (!results[idx]) return;
+  document.getElementById('sliderBefore_img').src = results[idx].origUrl;
+  document.getElementById('sliderAfter').src = results[idx].resultUrl;
+  setSliderPos(50);
+}
+
+function setSliderPos(pct) {
+  pct = Math.max(2, Math.min(98, pct));
+  document.getElementById('sliderBefore').style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+  document.getElementById('sliderLine').style.left = pct + '%';
+  document.getElementById('sliderHandle').style.left = pct + '%';
+}
+
+const sliderWrap = document.getElementById('sliderWrap');
+let dragging = false;
+
+function getSliderPct(clientX) {
+  const rect = sliderWrap.getBoundingClientRect();
+  return ((clientX - rect.left) / rect.width) * 100;
+}
+
+sliderWrap.addEventListener('mousedown', e => { dragging = true; setSliderPos(getSliderPct(e.clientX)); });
+window.addEventListener('mousemove', e => { if (dragging) setSliderPos(getSliderPct(e.clientX)); });
+window.addEventListener('mouseup', () => { dragging = false; });
+
+sliderWrap.addEventListener('touchstart', e => { dragging = true; setSliderPos(getSliderPct(e.touches[0].clientX)); }, { passive: true });
+window.addEventListener('touchmove', e => { if (dragging) setSliderPos(getSliderPct(e.touches[0].clientX)); }, { passive: true });
+window.addEventListener('touchend', () => { dragging = false; });
+
+// ─── Download ─────────────────────────────────────────────────────────────────
+function base64ToBlob(b64, type) {
+  const chars = atob(b64);
+  const arrays = [];
+  for (let o = 0; o < chars.length; o += 512) {
+    const sl = chars.slice(o, o + 512);
+    const arr = new Uint8Array(sl.length);
+    for (let i = 0; i < sl.length; i++) arr[i] = sl.charCodeAt(i);
+    arrays.push(arr);
+  }
+  return new Blob(arrays, { type });
+}
+
+async function downloadSingle(idx) {
+  const item = results[idx];
+  if (!item?.resultUrl) return;
+  const [header, b64] = item.resultUrl.split(',');
+  const ct = header.split(':')[1].split(';')[0];
+  const blob = base64ToBlob(b64, ct);
+  const ext = ct.includes('png') ? 'png' : 'jpg';
+  const fname = item.name.replace(/\.[^.]+$/, '') + '_estudio.' + ext;
+
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], fname, { type: ct })] })) {
+    try { await navigator.share({ files: [new File([blob], fname, { type: ct })], title: 'Foto mejorada' }); return; } catch(e) { if (e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 200);
+}
+
+document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+  if (!results.length) return;
+  showToast('Descargando ' + results.length + ' imágenes…');
+  for (let i = 0; i < results.length; i++) {
+    await downloadSingle(i);
+    if (results.length > 1) await sleep(400);
+  }
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
